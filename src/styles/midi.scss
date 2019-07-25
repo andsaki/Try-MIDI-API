@@ -1,1 +1,24 @@
-// empty
+body {
+  background-color: antiquewhite;
+}
+
+ul {
+  list-style: none;
+}
+
+.buttons-list li {
+  display: inline-block;
+}
+
+button {
+  padding: 10px;
+  margin: 10px;
+  background: #ddd;
+  border: 1px solid #333;
+  border-radius: 5px;
+}
+
+#tetris {
+  color: #fff;
+  background: #3b5fff;
+}

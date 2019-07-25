@@ -1,8 +1,9 @@
-var context = null;
-var oscillator = null;
+let context = null;
+let oscillator = null;
 function getOrCreateContext() {
   if (!context) {
     context = new AudioContext();
+    console.log(context);
     oscillator = context.createOscillator();
     oscillator.connect(context.destination);
   }
@@ -13,6 +14,10 @@ const debugEl = document.getElementById('debug');
 
 let isStarted = false;
 
+/**
+ * 波形の種類
+ * @param {string} type
+ */
 function changeType(type) {
   oscillator.type = type;
 }
@@ -67,7 +72,7 @@ const tetris = [
 function playTetris() {
   getOrCreateContext();
   oscillator.start(0);
-  var time = context.currentTime + eps;
+  let time = context.currentTime + eps;
   tetris.forEach((note) => {
     const freq = Math.pow(2, (note[0] - 69) / 12) * 440;
     console.log(time);
@@ -145,10 +150,9 @@ navigator.requestMIDIAccess().then(function(access) {
     replaceElements(Array.from(this.inputs.values()));
   };
 });
-console.log(navigator);
 
-// Below is keyboard emulation for C4-C5 q-i keys
-var emulatedKeys = {
+// C4-C5 q-iキーのキーボードエミュレーション
+const emulatedKeys = {
   q: 60,
   w: 62,
   e: 64,
@@ -159,15 +163,68 @@ var emulatedKeys = {
   i: 72
 };
 
+// タイプされたら呼ばれる
 document.addEventListener('keydown', function(e) {
-  console.log(e);
   if (emulatedKeys.hasOwnProperty(e.key)) {
     noteOn(emulatedKeys[e.key]);
   }
 });
 
+// タイプが終わったら呼ばれる
 document.addEventListener('keyup', function(e) {
   if (emulatedKeys.hasOwnProperty(e.key)) {
     noteOff();
   }
 });
+
+const con = new AudioContext();
+
+// Audio 用の buffer を読み込む
+var getAudioBuffer = function(url, fn) {
+  var req = new XMLHttpRequest();
+  // array buffer を指定
+  req.responseType = 'arraybuffer';
+
+  req.onreadystatechange = function() {
+    if (req.readyState === 4) {
+      if (req.status === 0 || req.status === 200) {
+        // array buffer を audio buffer に変換
+        con.decodeAudioData(req.response, function(buffer) {
+          // コールバックを実行
+          fn(buffer);
+        });
+      }
+    }
+  };
+
+  req.open('GET', url, true);
+  req.send('');
+};
+
+console.log(getAudioBuffer);
+
+// サウンドを再生
+var playSound = function(buffer) {
+  // source を作成
+  var source = con.createBufferSource();
+  // buffer をセット
+  source.buffer = buffer;
+  // context に connect
+  source.connect(con.destination);
+  // 再生
+  source.start(0);
+};
+
+// main
+window.onload = function() {
+  // サウンドを読み込む
+  getAudioBuffer('../mp3s/door_chime0.mp3', function(buffer) {
+    console.log('a');
+    // 読み込み完了後にボタンにクリックイベントを登録
+    document.getElementById('play-mp3').addEventListener('click', () => {
+      console.log('呼ばれた');
+      // サウンドを再生
+      playSound(buffer);
+    });
+  });
+};

@@ -11,7 +11,10 @@ module.exports = {
         enforce: 'pre',
         test: /\.js$/,
         exclude: /(node_modules)/,
-        loader: 'eslint-loader'
+        loader: 'eslint-loader',
+        options: {
+          fix: true
+        }
       },
       {
         // 拡張子 .js の場合
@@ -25,7 +28,7 @@ module.exports = {
             options: {
               presets: [
                 // プリセットを指定することで、ES2018 を ES5 に変換
-                '@babel/preset-env',
+                '@babel/preset-env'
                 // React の JSX を解釈
                 //'@babel/react'
               ]
@@ -39,8 +42,7 @@ module.exports = {
       },
       {
         test: /\.(jpg|png)$/,
-        loader: 'url-loader',
-        options: { limit: 8192 }
+        loader: 'url-loader'
       }
     ]
   },
@@ -57,7 +59,7 @@ module.exports = {
     extensions: ['.js']
   },
   devServer: {
-    port: 3000,
+    port: 8000,
     historyApiFallback: true
   }
 };
