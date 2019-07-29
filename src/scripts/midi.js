@@ -1,9 +1,10 @@
+import * as L from './library';
+
 let context = null;
 let oscillator = null;
 function getOrCreateContext() {
   if (!context) {
     context = new AudioContext();
-    console.log(context);
     oscillator = context.createOscillator();
     oscillator.connect(context.destination);
   }
@@ -22,63 +23,19 @@ function changeType(type) {
   oscillator.type = type;
 }
 
-const length = 2;
+const bpm = L.kirby.bpm;
+const length = (60 * 4) / bpm;
 const eps = 0.01;
 
-// This is a tetris theme transposed from https://musescore.com/user/16693/scores/38133
-const tetris = [
-  [76, 4],
-  [71, 8],
-  [72, 8],
-  [74, 4],
-  [72, 8],
-  [71, 8],
-  [69, 4],
-  [69, 8],
-  [72, 8],
-  [76, 4],
-  [74, 8],
-  [72, 8],
-  [71, 4],
-  [71, 8],
-  [72, 8],
-  [74, 4],
-  [76, 4],
-  [72, 4],
-  [69, 4],
-  [69, 4],
-  [0, 4],
-  [74, 3],
-  [77, 8],
-  [81, 4],
-  [79, 8],
-  [77, 8],
-  [76, 3],
-  [72, 8],
-  [76, 4],
-  [74, 8],
-  [72, 8],
-  [71, 4],
-  [71, 8],
-  [72, 8],
-  [74, 4],
-  [76, 4],
-  [72, 4],
-  [69, 4],
-  [69, 4],
-  [0, 4]
-];
-
-function playTetris() {
+function Play() {
   getOrCreateContext();
   oscillator.start(0);
   let time = context.currentTime + eps;
-  tetris.forEach((note) => {
-    const freq = Math.pow(2, (note[0] - 69) / 12) * 440;
-    console.log(time);
+  L.kirby.source.forEach((note) => {
+    const freq = Math.pow(2, (note.pitch - 69) / 12) * 440;
     oscillator.frequency.setTargetAtTime(0, time - eps, 0.001);
     oscillator.frequency.setTargetAtTime(freq, time, 0.001);
-    time += length / note[1];
+    time += length / note.beats;
   });
 }
 
@@ -95,7 +52,7 @@ document
   .getElementById('typetriangle')
   .addEventListener('click', changeType.bind(null, 'triangle'));
 
-document.getElementById('tetris').addEventListener('click', playTetris);
+document.getElementById('play').addEventListener('click', Play);
 
 function noteOn(midiNote) {
   console.log(midiNote);
@@ -153,14 +110,19 @@ navigator.requestMIDIAccess().then(function(access) {
 
 // C4-C5 q-iキーのキーボードエミュレーション
 const emulatedKeys = {
-  q: 60,
-  w: 62,
-  e: 64,
-  r: 65,
-  t: 67,
-  y: 69,
-  u: 71,
-  i: 72
+  a: 60, // C
+  w: 61, // C#
+  s: 62, // D
+  e: 63, // D#
+  d: 64, // E
+  f: 65, // F
+  t: 66, // F#
+  g: 67, // G
+  y: 68, // G#
+  h: 69, // A
+  u: 70, // A#
+  j: 71, // B
+  k: 72 // C
 };
 
 // タイプされたら呼ばれる
@@ -176,55 +138,3 @@ document.addEventListener('keyup', function(e) {
     noteOff();
   }
 });
-
-const con = new AudioContext();
-
-// Audio 用の buffer を読み込む
-var getAudioBuffer = function(url, fn) {
-  var req = new XMLHttpRequest();
-  // array buffer を指定
-  req.responseType = 'arraybuffer';
-
-  req.onreadystatechange = function() {
-    if (req.readyState === 4) {
-      if (req.status === 0 || req.status === 200) {
-        // array buffer を audio buffer に変換
-        con.decodeAudioData(req.response, function(buffer) {
-          // コールバックを実行
-          fn(buffer);
-        });
-      }
-    }
-  };
-
-  req.open('GET', url, true);
-  req.send('');
-};
-
-console.log(getAudioBuffer);
-
-// サウンドを再生
-var playSound = function(buffer) {
-  // source を作成
-  var source = con.createBufferSource();
-  // buffer をセット
-  source.buffer = buffer;
-  // context に connect
-  source.connect(con.destination);
-  // 再生
-  source.start(0);
-};
-
-// main
-window.onload = function() {
-  // サウンドを読み込む
-  getAudioBuffer('../mp3s/door_chime0.mp3', function(buffer) {
-    console.log('a');
-    // 読み込み完了後にボタンにクリックイベントを登録
-    document.getElementById('play-mp3').addEventListener('click', () => {
-      console.log('呼ばれた');
-      // サウンドを再生
-      playSound(buffer);
-    });
-  });
-};
